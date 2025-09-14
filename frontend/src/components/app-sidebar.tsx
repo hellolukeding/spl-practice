@@ -34,6 +34,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { WalletButton } from '@/components/wallet-connection'
 
 const data = {
     user: {
@@ -46,6 +47,16 @@ const data = {
             title: "仪表板",
             url: "/dashboard",
             icon: IconDashboard,
+        },
+        {
+            title: "账单",
+            url: "/billing",
+            icon: IconDatabase,
+        },
+        {
+            title: "Token 管理",
+            url: "/token-setup-new",
+            icon: IconSettings,
         },
         {
             title: "生命周期",
@@ -172,6 +183,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
+                {/* 钱包连接按钮 */}
+                <div className="px-2 py-2">
+                    <WalletButton />
+                </div>
             </SidebarHeader>
             <SidebarContent>
                 <NavMain items={data.navMain} />
