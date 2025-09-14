@@ -3,6 +3,7 @@
 import {
     IconCamera,
     IconChartBar,
+    IconCircuitCellPlus,
     IconDashboard,
     IconDatabase,
     IconFileAi,
@@ -10,13 +11,14 @@ import {
     IconFileWord,
     IconFolder,
     IconHelp,
-    IconInnerShadowTop,
     IconListDetails,
     IconReport,
     IconSearch,
     IconSettings,
-    IconUsers,
+    IconUsers
 } from "@tabler/icons-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import * as React from "react"
 
 import { NavDocuments } from '@/components/nav-documents'
@@ -35,122 +37,124 @@ import {
 
 const data = {
     user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg",
+        name: "$Battery",
+        email: "bc@battery.com",
+        avatar: "/imgs/battery.png",
     },
     navMain: [
         {
-            title: "Dashboard",
-            url: "#",
+            title: "仪表板",
+            url: "/dashboard",
             icon: IconDashboard,
         },
         {
-            title: "Lifecycle",
-            url: "#",
+            title: "生命周期",
+            url: "/lifecycle",
             icon: IconListDetails,
         },
         {
-            title: "Analytics",
-            url: "#",
+            title: "分析",
+            url: "/analytics",
             icon: IconChartBar,
         },
         {
-            title: "Projects",
-            url: "#",
+            title: "项目",
+            url: "/projects",
             icon: IconFolder,
         },
         {
-            title: "Team",
-            url: "#",
+            title: "团队",
+            url: "/teams",
             icon: IconUsers,
         },
     ],
     navClouds: [
         {
-            title: "Capture",
+            title: "捕获",
             icon: IconCamera,
             isActive: true,
-            url: "#",
+            url: "/capture",
             items: [
                 {
-                    title: "Active Proposals",
-                    url: "#",
+                    title: "活跃提案",
+                    url: "/capture/active",
                 },
                 {
-                    title: "Archived",
-                    url: "#",
+                    title: "已归档",
+                    url: "/capture/archived",
                 },
             ],
         },
         {
-            title: "Proposal",
+            title: "提案",
             icon: IconFileDescription,
-            url: "#",
+            url: "/proposals",
             items: [
                 {
-                    title: "Active Proposals",
-                    url: "#",
+                    title: "活跃提案",
+                    url: "/proposals/active",
                 },
                 {
-                    title: "Archived",
-                    url: "#",
+                    title: "已归档",
+                    url: "/proposals/archived",
                 },
             ],
         },
         {
-            title: "Prompts",
+            title: "提示",
             icon: IconFileAi,
-            url: "#",
+            url: "/prompts",
             items: [
                 {
-                    title: "Active Proposals",
-                    url: "#",
+                    title: "活跃提案",
+                    url: "/prompts/active",
                 },
                 {
-                    title: "Archived",
-                    url: "#",
+                    title: "已归档",
+                    url: "/prompts/archived",
                 },
             ],
         },
     ],
     navSecondary: [
         {
-            title: "Settings",
-            url: "#",
+            title: "设置",
+            url: "/settings",
             icon: IconSettings,
         },
         {
-            title: "Get Help",
-            url: "#",
+            title: "获取帮助",
+            url: "/help",
             icon: IconHelp,
         },
         {
-            title: "Search",
-            url: "#",
+            title: "搜索",
+            url: "/search",
             icon: IconSearch,
         },
     ],
     documents: [
         {
-            name: "Data Library",
-            url: "#",
+            name: "数据库",
+            url: "/database",
             icon: IconDatabase,
         },
         {
-            name: "Reports",
-            url: "#",
+            name: "报告",
+            url: "/reports",
             icon: IconReport,
         },
         {
-            name: "Word Assistant",
-            url: "#",
+            name: "文字助手",
+            url: "/documents",
             icon: IconFileWord,
         },
     ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const pathname = usePathname()
+
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader>
@@ -159,11 +163,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <SidebarMenuButton
                             asChild
                             className="data-[slot=sidebar-menu-button]:!p-1.5"
+                            isActive={pathname === "/"}
                         >
-                            <a href="#">
-                                <IconInnerShadowTop className="!size-5" />
-                                <span className="text-base font-semibold">Acme Inc.</span>
-                            </a>
+                            <Link href="/">
+                                <IconCircuitCellPlus className="!size-5" />
+                                <span className="text-base font-semibold">workspace</span>
+                            </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
