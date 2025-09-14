@@ -1,5 +1,11 @@
+// 从环境变量获取程序地址
+const PROGRAM_ADDRESS = process.env.NEXT_PUBLIC_PROGRAM_ID;
+if (!PROGRAM_ADDRESS) {
+    throw new Error('NEXT_PUBLIC_PROGRAM_ID 环境变量未设置');
+}
+
 export const IDL = {
-    "address": "85geTUQkHkLGJULKAWs211TR3Exs5hbdjLV53zwZGL7q",
+    "address": PROGRAM_ADDRESS,
     "metadata": {
         "name": "spl_practice",
         "version": "0.1.0",

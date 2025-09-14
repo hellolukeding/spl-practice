@@ -1,6 +1,8 @@
 'use client';
 
 import AppContainer from "@/components/app-container";
+import { ConsoleViewer } from "@/components/console-viewer";
+import { DevnetGuide } from "@/components/devnet-guide";
 import { IDLDebugger } from "@/components/idl-debugger";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,8 +14,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { WalletConnection } from "@/components/wallet-connection";
 import { useTokenOperations, useTransactionHistory, useUserProfile } from "@/hooks/use-solana";
-import { useWallet } from '@solana/wallet-adapter-react';
-import { IconCoins, IconGift, IconRefresh } from "@tabler/icons-react";
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { IconAlertTriangle, IconCheck, IconCoins, IconGift, IconRefresh } from "@tabler/icons-react";
 import React, { useEffect, useState } from 'react';
 import { toast } from "sonner";
 
@@ -37,6 +40,7 @@ const TransactionTypeIconMap = {
 
 const Billing: React.FC<BillingProps> = (props) => {
     const { connected, publicKey, wallet } = useWallet();
+    const { connection } = useConnection();
     const { userProfile, isLoading: profileLoading, createUserProfile, programReady, error: programError } = useUserProfile();
     const {
         tokenBalance,
@@ -48,6 +52,11 @@ const Billing: React.FC<BillingProps> = (props) => {
     const { transactions, isLoading: transactionLoading } = useTransactionHistory();
 
     const [activeFilter, setActiveFilter] = useState('所有');
+    const [solBalance, setSolBalance] = useState<number>(0);
+    const [networkInfo, setNetworkInfo] = useState<{
+        cluster: string;
+        isDevnet: boolean;
+    }>({ cluster: 'unknown', isDevnet: false });
     const [isMinting, setIsMinting] = useState(false);
     const [isClient, setIsClient] = useState(false);
 
@@ -55,6 +64,47 @@ const Billing: React.FC<BillingProps> = (props) => {
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    // 检查网络状态和余额
+    useEffect(() => {
+        const checkNetworkAndBalance = async () => {
+            if (!connected || !publicKey || !connection) return;
+
+            try {
+                // 获取 SOL 余额
+                const balance = await connection.getBalance(publicKey);
+                setSolBalance(balance / LAMPORTS_PER_SOL);
+
+                // 检查网络信息
+                const genesisHash = await connection.getGenesisHash();
+                const isDevnet = genesisHash === 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG';
+
+                setNetworkInfo({
+                    cluster: isDevnet ? 'devnet' : 'mainnet/testnet',
+                    isDevnet
+                });
+
+                // 如果不是 devnet，显示警告
+                if (!isDevnet) {
+                    toast.warning('请切换钱包到 Devnet 网络', {
+                        description: '当前合约部署在 Devnet 上，请确保钱包连接到正确的网络。'
+                    });
+                }
+
+                // 如果余额太低，显示警告
+                if (balance < 0.01 * LAMPORTS_PER_SOL) {
+                    toast.warning('SOL 余额不足', {
+                        description: `当前余额: ${(balance / LAMPORTS_PER_SOL).toFixed(4)} SOL。建议至少有 0.01 SOL 用于交易费用。`
+                    });
+                }
+
+            } catch (error) {
+                console.error('检查网络状态失败:', error);
+            }
+        };
+
+        checkNetworkAndBalance();
+    }, [connected, publicKey, connection]);
 
     // 如果钱包已连接且程序准备好但没有用户资料，创建一个默认资料
     useEffect(() => {
@@ -151,6 +201,30 @@ const Billing: React.FC<BillingProps> = (props) => {
             <section className="w-full h-full flex flex-col items-center justify-center px-4">
                 <img src="/imgs/battery.png" alt="" className="w-20 rounded-2xl" />
 
+                {/* 网络状态检查 */}
+                <div className="w-full mt-4 p-3 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                        {networkInfo.isDevnet ? (
+                            <IconCheck className="h-4 w-4 text-green-500" />
+                        ) : (
+                            <IconAlertTriangle className="h-4 w-4 text-orange-500" />
+                        )}
+                        <span className="font-medium">网络状态</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        当前网络: {networkInfo.cluster}
+                        {!networkInfo.isDevnet && (
+                            <span className="text-orange-500 ml-2">(需要切换到 Devnet)</span>
+                        )}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        SOL 余额: {solBalance.toFixed(4)} SOL
+                        {solBalance < 0.01 && (
+                            <span className="text-orange-500 ml-2">(余额不足，建议至少 0.01 SOL)</span>
+                        )}
+                    </p>
+                </div>
+
                 {/* 调试信息 */}
                 <div className="w-full mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
                     <p>钱包状态: {connected ? '已连接' : '未连接'}</p>
@@ -196,6 +270,9 @@ const Billing: React.FC<BillingProps> = (props) => {
                         </CardAction>
                     </CardHeader>
                 </Card>
+
+                {/* 显示配置指南（如果网络不正确或余额不足） */}
+                {(!networkInfo.isDevnet || solBalance < 0.01) && <DevnetGuide />}
 
                 <Separator />
 
@@ -257,6 +334,9 @@ const Billing: React.FC<BillingProps> = (props) => {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* 控制台查看器 */}
+                <ConsoleViewer />
             </section>
         </AppContainer>
     );

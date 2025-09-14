@@ -1,9 +1,9 @@
 'use client';
 
+import { IDL } from '@/lib/idl-legacy';
 import {
     getDailyMintRecordPDA,
     getUserProfilePDA,
-    IDL,
     PROGRAM_ID,
     TOKEN_PROGRAM_ID
 } from '@/lib/solana-config';
@@ -107,8 +107,8 @@ export const useSolanaProgram = () => {
                     throw new Error('IDL 不是有效的对象');
                 }
 
-                if (!IDL.metadata || !IDL.instructions || !IDL.types) {
-                    throw new Error('IDL 格式不正确，缺少必要字段 (metadata, instructions, types)');
+                if (!IDL.name || !IDL.instructions || !IDL.accounts) {
+                    throw new Error('IDL 格式不正确，缺少必要字段 (name, instructions, accounts)');
                 }
 
                 if (!Array.isArray(IDL.instructions)) {
@@ -116,14 +116,12 @@ export const useSolanaProgram = () => {
                 }
 
                 console.log('IDL 验证通过:', {
-                    name: IDL.metadata?.name,
+                    name: IDL.name,
+                    version: IDL.version,
                     instructions: IDL.instructions?.length,
-                    types: IDL.types?.length,
-                    hasMetadata: !!IDL.metadata,
+                    accounts: IDL.accounts?.length,
                     idlKeys: Object.keys(IDL)
-                });
-
-                console.log('创建 AnchorProvider...');
+                }); console.log('创建 AnchorProvider...');
                 const provider = new AnchorProvider(
                     connection,
                     {
@@ -136,7 +134,9 @@ export const useSolanaProgram = () => {
 
                 console.log('创建 Program 实例...');
                 try {
-                    // 尝试方法1: 直接使用 IDL
+                    // 尝试方法1: 直接使用简化的 IDL
+                    console.log('使用简化 IDL:', IDL);
+
                     const program = new Program(IDL as any, PROGRAM_ID, provider);
                     console.log('Program 实例创建成功 (方法1)');
                     setProgram(program);
@@ -145,22 +145,23 @@ export const useSolanaProgram = () => {
                 } catch (programError) {
                     console.error('方法1失败，尝试方法2:', programError);
 
-                    // 尝试方法2: 使用简化的 IDL
-                    try {
-                        const simplifiedIDL = {
-                            ...IDL,
-                            version: IDL.metadata?.version || "0.1.0",
-                            name: IDL.metadata?.name || "spl_practice"
-                        };
-                        const program = new Program(simplifiedIDL as any, PROGRAM_ID, provider);
-                        console.log('Program 实例创建成功 (方法2)');
-                        setProgram(program);
-                        setError(null);
-                        console.log('=== 程序初始化成功 (方法2) ===');
-                    } catch (program2Error) {
-                        console.error('所有方法都失败:', program2Error);
-                        throw program2Error;
-                    }
+                    // 尝试方法2: 从静态 JSON 文件加载
+                    fetch('/spl_practice.json')
+                        .then(response => response.json())
+                        .then(staticIDL => {
+                            console.log('静态 IDL 加载成功:', staticIDL);
+                            const program = new Program(staticIDL, PROGRAM_ID, provider);
+                            console.log('Program 实例创建成功 (方法2)');
+                            setProgram(program);
+                            setError(null);
+                            console.log('=== 程序初始化成功 (方法2) ===');
+                        })
+                        .catch(program2Error => {
+                            console.error('所有方法都失败:', program2Error);
+                            const errorMessage = program2Error instanceof Error ? program2Error.message : '未知错误';
+                            setError(`无法初始化程序连接: ${errorMessage}`);
+                            setProgram(null);
+                        });
                 }
             } catch (err) {
                 console.error('=== 程序初始化失败 ===');
