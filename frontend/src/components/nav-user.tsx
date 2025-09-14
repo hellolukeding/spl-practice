@@ -28,6 +28,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from '@/components/ui/sidebar'
+import { redirect } from "next/navigation"
 
 export function NavUser({
     user,
@@ -39,6 +40,15 @@ export function NavUser({
     }
 }) {
     const { isMobile } = useSidebar()
+
+    const handleNavi = (
+        path: "billing" | "account" | "notifications" | "logout",
+    ) => {
+        switch (path) {
+            case "billing":
+                redirect("/billing")
+        }
+    }
 
     return (
         <SidebarMenu>
@@ -84,11 +94,11 @@ export function NavUser({
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem >
                                 <IconUserCircle />
                                 Account
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleNavi("billing")}>
                                 <IconCreditCard />
                                 Billing
                             </DropdownMenuItem>
